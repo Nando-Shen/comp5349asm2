@@ -148,7 +148,7 @@ pos_count_for_imp_neg.show(5)
 # join the denominator and numerator columns and calculate the average number for further filtering.
 ave_column = when(col("false_count") == 0, 0).otherwise(round(col("count") / col("false_count")))
 test_ave_result = test_paragraphs_ans_id_full_df.join(pos_count_for_imp_neg, "question", "left") \
-    .withColumn("avg", ave_column).select("question", "avg")
+    .withColumn("ave", ave_column).select("question", "ave")
 test_ave_result.show(4)
 
 # join the average number back to the impossible negative samples
