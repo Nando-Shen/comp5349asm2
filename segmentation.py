@@ -10,26 +10,32 @@ spark.sparkContext.setLogLevel("ERROR")
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--output", help="the output path", default='output.json')
+parser.add_argument("--dataset", help="the dataset to be proceeded", default='output.json')
 args = parser.parse_args()
 output_path = args.output
+dataset_opt = args.dataset
 
 test_data = 's3://comp5349-2022/test.json'
 train_data = 's3://comp5349-2022/train_separate_questions.json'
 full_data = 's3://comp5349-2022/CUADv1.json'
 
+data_dic = {'test': test_data, 'train': train_data, 'full': full_data}
+
 # read in data
-test_init_df = spark.read.json(test_data)
+test_init_df = spark.read.json(data_dic.get(dataset_opt))
 
 # explode data column
 test_data_df = test_init_df.select((explode("data").alias('data')))
 test_data_df.show(5)
 
 # explode paragraphs column
-test_paragraphs_df = test_data_df.select((explode("data.paragraphs").alias('paragraphs')), col("data.title").alias("title"))
+test_paragraphs_df = test_data_df.select((explode("data.paragraphs").alias('paragraphs')),
+                                         col("data.title").alias("title"))
 test_paragraphs_df.show(5)
 
 # extract information in the paragraphs columns
-test_paragraphs_context_df = test_paragraphs_df.select("title", col("paragraphs.context").alias("context"), col("paragraphs.qas").alias("qas"))
+test_paragraphs_context_df = test_paragraphs_df.select("title", col("paragraphs.context").alias("context"),
+                                                       col("paragraphs.qas").alias("qas"))
 test_paragraphs_context_df.show(5)
 
 
@@ -55,7 +61,8 @@ def segmentation(row):
 
 
 # explode the segmented context into rows
-segmentation_df = test_paragraphs_context_df.select("title", explode(segmentation(col("context"))).alias("context"), "qas")
+segmentation_df = test_paragraphs_context_df.select("title", explode(segmentation(col("context"))).alias("context"),
+                                                    "qas")
 segmentation_df.show(4)
 
 # explode the non-segmented qas column
@@ -66,7 +73,7 @@ test_paragraphs_inner_df.show(5)
 test_paragraphs_qas_full_df = test_paragraphs_inner_df.select("context", col("qas.answers").alias("answers"),
                                                               col("qas.id").alias("id"),
                                                               col("qas.is_impossible").alias("is_impossible"),
-                                                               col("qas.question").alias("question"), "title")
+                                                              col("qas.question").alias("question"), "title")
 test_paragraphs_qas_full_df.show(2)
 
 # group by question to calculate the number of false 'is_impossible' question
@@ -121,7 +128,8 @@ def label(context, answer_start, text):
 
 
 # use udf function to label the generated sequence
-test_labeled_ans_df = test_paragraphs_ans_df.withColumn("label", label(col("context"), col("answer_start"), col("text")))
+test_labeled_ans_df = test_paragraphs_ans_df.withColumn("label",
+                                                        label(col("context"),col("answer_start"), col("text")))
 test_labeled_ans_df.show(4)
 
 # extract the information in th nested context and label columns
