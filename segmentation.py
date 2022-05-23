@@ -135,7 +135,7 @@ test_split_ans_df = test_labeled_ans_df.select("context.*", "text", "id", "quest
 test_split_ans_df.show(3)
 
 # filter the sample according to their type
-test_split_ans_pos = test_split_ans_df.filter(test_split_ans_df.label == "pos")
+test_split_ans_pos = test_split_ans_df.filter(test_split_ans_df.label == "pos").cache()
 test_split_ans_imp_neg = test_split_ans_df.filter(test_split_ans_df.label == "imp_neg")
 test_split_ans_pos_neg = test_split_ans_df.filter(test_split_ans_df.label == "pos_neg")
 
