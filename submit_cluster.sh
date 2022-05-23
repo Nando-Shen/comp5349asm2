@@ -2,5 +2,5 @@ spark-submit \
     --master yarn \
     --deploy-mode cluster \
     segmentation.py \
-    --output $1
-    --dataset "test"
+    --output $1 \
+    --data "test"
