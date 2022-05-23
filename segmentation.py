@@ -15,11 +15,9 @@ args = parser.parse_args()
 output_path = args.output
 dataset_opt = args.dataset
 
-test_data = 's3://comp5349-2022/test.json'
-train_data = 's3://comp5349-2022/train_separate_questions.json'
-full_data = 's3://comp5349-2022/CUADv1.json'
-
-data_dic = {'test': test_data, 'train': train_data, 'full': full_data}
+data_dic = {'test': 's3://comp5349-2022/test.json',
+            'train': 's3://comp5349-2022/train_separate_questions.json',
+            'full': 's3://comp5349-2022/CUADv1.json'}
 
 # read in data
 test_init_df = spark.read.json(data_dic.get(dataset_opt))
