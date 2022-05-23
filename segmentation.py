@@ -25,11 +25,11 @@ test_data_df = test_init_df.select((explode("data").alias('data')))
 test_data_df.show(5)
 
 # explode paragraphs column
-test_paragraphs_df = test_data_df.select((explode("data.paragraphs").alias('paragraphs')), "data.title")
+test_paragraphs_df = test_data_df.select((explode("data.paragraphs").alias('paragraphs')), col("data.title").alias("title"))
 test_paragraphs_df.show(5)
 
 # extract information in the paragraphs columns
-test_paragraphs_context_df = test_paragraphs_df.select("title", "paragraphs.context", "paragraphs.qas")
+test_paragraphs_context_df = test_paragraphs_df.select("title", col("paragraphs.context").alias("context"), col("paragraphs.qas").alias("qas"))
 test_paragraphs_context_df.show(5)
 
 
@@ -63,7 +63,10 @@ test_paragraphs_inner_df = test_paragraphs_context_df.select("title", "context",
 test_paragraphs_inner_df.show(5)
 
 # extract the information in the qas column
-test_paragraphs_qas_full_df = test_paragraphs_inner_df.select("context", "qas.answers", "qas.id", "qas.is_impossible", "qas.question", "title")
+test_paragraphs_qas_full_df = test_paragraphs_inner_df.select("context", col("qas.answers").alias("answers"),
+                                                              col("qas.id").alias("id"),
+                                                              col("qas.is_impossible").alias("is_impossible"),
+                                                               col("qas.question").alias("question"), "title")
 test_paragraphs_qas_full_df.show(2)
 
 # group by question to calculate the number of false 'is_impossible' question
@@ -78,11 +81,18 @@ test_seg_paragraphs_df = segmentation_df.select("title", "context", explode("qas
 test_seg_paragraphs_df.show(5)
 
 # use explode_outer on answers to ensure the empty answers being retained.
-test_paragraphs_qas_df = test_seg_paragraphs_df.select("context", explode_outer("qas.answers").alias("answers"), "qas.id", "qas.is_impossible", "qas.question", "title")
+test_paragraphs_qas_df = test_seg_paragraphs_df.select("context", explode_outer("qas.answers").alias("answers"),
+                                                       col("qas.id").alias("id"),
+                                                       col("qas.is_impossible").alias("is_impossible"),
+                                                       col("qas.question").alias("question"), "title")
 test_paragraphs_qas_df.show(5)
 
 # extract the information in the answers column
-test_paragraphs_ans_df = test_paragraphs_qas_df.select("context", "answers.answer_start", "answers.text", "id", "is_impossible", "question", "title")
+test_paragraphs_ans_df = test_paragraphs_qas_df.select("context",
+                                                       col("answers.answer_start").alias("answer_start"),
+                                                       col("answers.text").alias("text"), "id", "is_impossible",
+                                                       "question", "title")
+
 test_paragraphs_ans_df.show(5)
 
 
