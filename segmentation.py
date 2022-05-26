@@ -7,7 +7,7 @@ import argparse
 # init the spark session
 spark = SparkSession.builder.appName("COMP5349 A2").getOrCreate()
 spark.sparkContext.setLogLevel("ERROR")
-spark.conf.set("spark.default.parallelism", 32)
+spark.conf.set("spark.default.parallelism", 50)
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--output", help="the output path", default='output.json')
@@ -128,7 +128,7 @@ def label(context, answer_start, text):
 
 # use udf function to label the generated sequence
 test_labeled_ans_df = test_paragraphs_ans_df.withColumn("label",
-                                                        label(col("context"),col("answer_start"), col("text")))
+                                                        label(col("context"), col("answer_start"), col("text")))
 test_labeled_ans_df.show(4)
 
 # extract the information in th nested context and label columns
