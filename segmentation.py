@@ -64,23 +64,6 @@ segmentation_df = test_paragraphs_context_df.select("title", explode(segmentatio
                                                     "qas")
 # segmentation_df.show(4)
 
-# explode the non-segmented qas column
-test_paragraphs_inner_df = test_paragraphs_context_df.select("title", "context", explode("qas").alias("qas"))
-# test_paragraphs_inner_df.show(5)
-
-# extract the information in the qas column
-test_paragraphs_qas_full_df = test_paragraphs_inner_df.select("context", col("qas.answers").alias("answers"),
-                                                              col("qas.id").alias("id"),
-                                                              col("qas.is_impossible").alias("is_impossible"),
-                                                              col("qas.question").alias("question"), "title")
-# test_paragraphs_qas_full_df.show(2)
-
-# group by question to calculate the number of false 'is_impossible' question
-test_paragraphs_ans_id_full_df = test_paragraphs_qas_full_df.groupBy("question").agg(
-    collect_list('is_impossible').alias("is_impossible")) \
-    .withColumn("false_count", size(filter(col("is_impossible"), lambda s: s == False)))
-# test_paragraphs_ans_id_full_df.show(5)
-
 # explode the segmented qas column
 test_seg_paragraphs_df = segmentation_df.select("title", "context", explode("qas").alias("qas"))
 # test_seg_paragraphs_df.show(5)
@@ -153,6 +136,24 @@ pos_count_for_pos_neg = test_split_ans_pos.groupBy("id").count()
 # group by question on positive sample for the calculation of impossible negative
 pos_count_for_imp_neg = test_split_ans_pos.groupBy("question").count()
 # pos_count_for_imp_neg.show(5)
+
+
+# explode the non-segmented qas column
+test_paragraphs_inner_df = test_paragraphs_context_df.select("title", "context", explode("qas").alias("qas"))
+# test_paragraphs_inner_df.show(5)
+
+# extract the information in the qas column
+test_paragraphs_qas_full_df = test_paragraphs_inner_df.select("context", col("qas.answers").alias("answers"),
+                                                              col("qas.id").alias("id"),
+                                                              col("qas.is_impossible").alias("is_impossible"),
+                                                              col("qas.question").alias("question"), "title")
+# test_paragraphs_qas_full_df.show(2)
+
+# group by question to calculate the number of false 'is_impossible' question
+test_paragraphs_ans_id_full_df = test_paragraphs_qas_full_df.groupBy("question").agg(
+    collect_list('is_impossible').alias("is_impossible")) \
+    .withColumn("false_count", size(filter(col("is_impossible"), lambda s: s == False)))
+# test_paragraphs_ans_id_full_df.show(5)
 
 # join the denominator and numerator columns and calculate the average number for further filtering.
 ave_column = when(col("false_count") == 0, 0).otherwise(round(col("count") / col("false_count")))
