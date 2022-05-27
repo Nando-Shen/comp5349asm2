@@ -3,4 +3,4 @@ spark-submit \
     --deploy-mode client \
     segmentation.py \
     --output $1 \
-    --dataset "test"
+    --dataset $2

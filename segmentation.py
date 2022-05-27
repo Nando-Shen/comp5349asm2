@@ -78,8 +78,7 @@ test_paragraphs_qas_full_df = test_paragraphs_inner_df.select("context", col("qa
 # group by question to calculate the number of false 'is_impossible' question
 test_paragraphs_ans_id_full_df = test_paragraphs_qas_full_df.groupBy("question").agg(
     collect_list('is_impossible').alias("is_impossible")) \
-    .withColumn("false_count", size(filter(col("is_impossible"), lambda s: s == False))) \
-    .orderBy("false_count", ascending=False)
+    .withColumn("false_count", size(filter(col("is_impossible"), lambda s: s == False)))
 # test_paragraphs_ans_id_full_df.show(5)
 
 # explode the segmented qas column
@@ -142,10 +141,12 @@ test_split_ans_imp_neg = test_split_ans_df.filter(test_split_ans_df.label == "im
 test_split_ans_pos_neg = test_split_ans_df.filter(test_split_ans_df.label == "pos_neg")
 
 # use anti join to remove the repeat sequence (for unique sequence)
-test_uni_split_imp_neg = test_split_ans_imp_neg.join(broadcast(test_split_ans_pos), ["source"], "leftanti")
-test_uni_split_pos_neg = test_split_ans_pos_neg.join(broadcast(test_split_ans_pos), ["source"], "leftanti")
+# test_uni_split_imp_neg = test_split_ans_imp_neg.join(broadcast(test_split_ans_pos), ["source"], "leftanti")
+# test_uni_split_pos_neg = test_split_ans_pos_neg.join(broadcast(test_split_ans_pos), ["source"], "leftanti")
+test_uni_split_imp_neg = test_split_ans_imp_neg.join(test_split_ans_pos, ["source"], "leftanti")
+test_uni_split_pos_neg = test_split_ans_pos_neg.join(test_split_ans_pos, ["source"], "leftanti")
 
-# group by id on positive sample for the calculation of positive negative
+# group by id on positive sample for the calculation of possible negative
 pos_count_for_pos_neg = test_split_ans_pos.groupBy("id").count()
 # pos_count_for_pos_neg.show(5)
 
@@ -155,16 +156,18 @@ pos_count_for_imp_neg = test_split_ans_pos.groupBy("question").count()
 
 # join the denominator and numerator columns and calculate the average number for further filtering.
 ave_column = when(col("false_count") == 0, 0).otherwise(round(col("count") / col("false_count")))
-test_ave_result = test_paragraphs_ans_id_full_df.join(broadcast(pos_count_for_imp_neg), "question", "left") \
+# test_ave_result = test_paragraphs_ans_id_full_df.join(broadcast(pos_count_for_imp_neg), "question", "left") \
+#     .withColumn("ave", ave_column).select("question", "ave")
+test_ave_result = test_paragraphs_ans_id_full_df.join(pos_count_for_imp_neg, "question", "left") \
     .withColumn("ave", ave_column).select("question", "ave")
 # test_ave_result.show(4)
 
 # join the average number back to the impossible negative samples
-test_matched_imp_neg = test_uni_split_imp_neg.join(broadcast(test_ave_result), "question")
+test_matched_imp_neg = test_uni_split_imp_neg.join(test_ave_result, "question")
 # test_matched_imp_neg.show(5)
 
 # join the positive sample number back to the possible negative samples
-test_matched_pos_neg = test_uni_split_pos_neg.join(broadcast(pos_count_for_pos_neg), "id")
+test_matched_pos_neg = test_uni_split_pos_neg.join(pos_count_for_pos_neg, "id")
 # test_matched_pos_neg.show(5)
 
 # window function to filter the possible negative samples
