@@ -7,7 +7,7 @@ import argparse
 # init the spark session
 spark = SparkSession.builder.appName("COMP5349 A2").getOrCreate()
 spark.sparkContext.setLogLevel("ERROR")
-spark.conf.set("spark.default.parallelism", 80)
+spark.conf.set("spark.default.parallelism", 100)
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--output", help="the output path", default='output.json')
